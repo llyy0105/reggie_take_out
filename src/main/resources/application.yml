@@ -17,6 +17,8 @@ spring:
     database: 0
   cache:
     type: redis
+    redis:
+      time-to-live: 1800000
 
 mybatis-plus:
   configuration:
