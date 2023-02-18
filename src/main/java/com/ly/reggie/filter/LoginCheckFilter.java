@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.ly.reggie.common.BaseContext;
 import com.ly.reggie.common.R;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.Manager;
 import org.springframework.util.AntPathMatcher;
 
 import javax.servlet.*;
@@ -22,7 +21,7 @@ import java.io.IOException;
 @Slf4j
 @WebFilter(filterName = "LoginCheckFilter",urlPatterns = "/*")
 public class LoginCheckFilter implements Filter {
-    //路径匹配器，支持通配符
+    // 路径匹配器，支持通配符
     public static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
@@ -42,7 +41,11 @@ public class LoginCheckFilter implements Filter {
                 "/front/**",
                 "/common/**",
                 "/user/sendMsg",
-                "/user/login"
+                "/user/login",
+                "/doc.html",
+                "/webjars/**",
+                "/swagger-resources",
+                "/v2/api-docs"
         };
 
         // 2.判断本次请求是否需要处理

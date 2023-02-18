@@ -11,6 +11,10 @@ import com.ly.reggie.entity.SetmealDish;
 import com.ly.reggie.service.CategoryService;
 import com.ly.reggie.service.SetmealDishService;
 import com.ly.reggie.service.SetmealService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.BeanUtils;
@@ -30,17 +34,17 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/setmeal")
+@Api(tags = "套餐相关接口")
 public class SetmealController {
 
     @Autowired
     private SetmealService setmealService;
     @Autowired
-    private SetmealDishService setmealDishService;
-    @Autowired
     private CategoryService categoryService;
 
     // 新增套餐
     @PostMapping
+    @ApiOperation(value = "新增套餐接口")
     @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> save(@RequestBody SetmealDto setmealDto){
         log.info(setmealDto.toString());
@@ -51,7 +55,10 @@ public class SetmealController {
 
     // 分页查询套餐
     @GetMapping("/page")
-    public R<Page> page(int page, int pageSize, String name){
+    @ApiOperation("分页查询套餐接口")
+    public R<Page> page(@ApiParam(name = "page",value = "页码",required = true)int page,
+                        @ApiParam(name = "pageSize",value = "每页记录数",required = true) int pageSize,
+                        @ApiParam(name = "name",value = "套餐名称",required = false)String name){
         log.info("page = {},pageSize = {},name = {}",page,pageSize,name);
 
         // 分页构造器
