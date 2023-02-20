@@ -74,6 +74,7 @@ public class ShoppingCartController {
 
         // 查询当前菜品或者是套餐是否在购物车中
         Long dishId = shoppingCart.getDishId();
+        Long setmealId = shoppingCart.getSetmealId();
         LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShoppingCart::getUserId,currendId);
 
@@ -82,12 +83,12 @@ public class ShoppingCartController {
             queryWrapper.eq(ShoppingCart::getDishId,dishId);
         }else {
             // 减少的为套餐
-            queryWrapper.eq(ShoppingCart::getSetmealId,shoppingCart.getSetmealId());
+            queryWrapper.eq(ShoppingCart::getSetmealId,setmealId);
         }
 
         ShoppingCart cartServiceOne = shoppingCartService.getOne(queryWrapper);
-
         Integer number = cartServiceOne.getNumber();
+
         if (number > 1){
             // 如果数量大于1，就在原来数量上-1
             cartServiceOne.setNumber(number - 1);
@@ -119,11 +120,7 @@ public class ShoppingCartController {
     public R<String> clean(){
         log.info("清空购物车...");
 
-        LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ShoppingCart::getUserId,BaseContext.getCurrendId());
-
-        shoppingCartService.remove(queryWrapper);
-
+        shoppingCartService.clean();
         return R.success("清空购物车成功");
     }
 }

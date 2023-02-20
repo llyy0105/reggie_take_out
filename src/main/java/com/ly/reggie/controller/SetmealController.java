@@ -3,12 +3,14 @@ package com.ly.reggie.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ly.reggie.common.R;
+import com.ly.reggie.dto.DishDto;
 import com.ly.reggie.dto.SetmealDto;
 import com.ly.reggie.entity.Category;
 import com.ly.reggie.entity.Dish;
 import com.ly.reggie.entity.Setmeal;
 import com.ly.reggie.entity.SetmealDish;
 import com.ly.reggie.service.CategoryService;
+import com.ly.reggie.service.DishService;
 import com.ly.reggie.service.SetmealDishService;
 import com.ly.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +41,10 @@ public class SetmealController {
     private SetmealDishService setmealDishService;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private DishService dishService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     // 新增套餐
     @PostMapping
@@ -90,16 +97,6 @@ public class SetmealController {
         return R.success(setmealPage);
     }
 
-    // 删除套餐
-    @DeleteMapping
-    @CacheEvict(value = "setmealCache",allEntries = true)
-    public R<String> delete(@RequestParam List<Long> ids){
-        log.info("删除分类，ids为：{}",ids);
-        setmealService.removeWithDish(ids);
-
-        return R.success("套餐删除成功");
-    }
-
     // 根据条件查询对应的套餐数据
     @GetMapping("/list")
     @Cacheable(value = "setmealCache",key = "#setmeal.categoryId")
@@ -113,6 +110,84 @@ public class SetmealController {
         List<Setmeal> list = setmealService.list(queryWrapper);
 
         return R.success(list);
+    }
+
+    // 根据id查询套餐信息
+    @GetMapping("/{id}")
+    public R<SetmealDto> get(@PathVariable Long id){
+        log.info("根据id查询套餐信息...");
+
+        SetmealDto setmealDto = setmealService.getByIdWithDish(id);
+        return R.success(setmealDto);
+    }
+
+    // 修改套餐
+    @PutMapping
+    public R<String> update(@RequestBody SetmealDto setmealDto){
+        log.info(setmealDto.toString());
+        setmealService.updateWithDish(setmealDto);
+
+        // 清理所有菜品的缓存数据
+//        Set keys = redisTemplate.keys("setmeal_*");
+//        redisTemplate.delete(keys);
+
+        // 清理某个分类下面的菜品缓存数据
+        String key = "setmeal_" + setmealDto.getCategoryId() + "_";
+        redisTemplate.delete(key);
+
+        return R.success("修改套餐成功");
+    }
+
+    // 对套餐批量或单个进行删除
+    @DeleteMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)
+    public R<String> delete(@RequestParam List<Long> ids){
+        log.info("删除分类，ids为：{}",ids);
+        setmealService.removeWithDish(ids);
+
+        return R.success("套餐删除成功");
+    }
+
+    // 对套餐批量或单个进行停售或起售
+    @PostMapping("/status/{status}")
+    public R<String> status(@PathVariable Integer status,@RequestParam List<Long> ids){
+        log.info("status为：{},ids为：{}",status,ids);
+
+        LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(ids != null,Setmeal::getId,ids);
+        List<Setmeal> setmealList = setmealService.list(queryWrapper);
+
+        for (Setmeal setmeal : setmealList) {
+            if (setmeal != null){
+                setmeal.setStatus(status);
+                setmealService.updateById(setmeal);
+            }
+        }
+
+        return R.success("售卖状态修改成功");
+    }
+
+    // 移动端点击套餐图片查看套餐具体内容
+    @GetMapping("/dish/{id}")
+    public R<List<DishDto>> dish(@PathVariable("id") Long SetmealId){
+        LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SetmealDish::getSetmealId,SetmealId);
+
+        // 获取套餐里面的所有菜品
+        List<SetmealDish> setmealDishList = setmealDishService.list(queryWrapper);
+
+        List<DishDto> dishDtoList = setmealDishList.stream().map(item -> {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(item, dishDto);
+            // 获取菜品id
+            Long dishId = item.getDishId();
+            Dish dish = dishService.getById(dishId);
+            // 将菜品信息填充到dto中
+            BeanUtils.copyProperties(dish, dishDto);
+            return dishDto;
+        }).collect(Collectors.toList());
+
+        return R.success(dishDtoList);
     }
 }
 

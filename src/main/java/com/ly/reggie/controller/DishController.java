@@ -191,6 +191,41 @@ public class DishController {
 
         return R.success(dishDtoList);
     }
+
+    // 对菜品批量或单个进行停售或起售
+    @PostMapping("/status/{status}")
+    public R<String> status(@PathVariable Integer status,@RequestParam List<Long> ids){
+        log.info("status为：{},ids为：{}",status,ids);
+
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(ids != null,Dish::getId,ids);
+        List<Dish> dishList = dishService.list(queryWrapper);
+
+        for (Dish dish : dishList) {
+            if (dish != null){
+                dish.setStatus(status);
+                dishService.updateById(dish);
+            }
+        }
+
+        return R.success("售卖状态修改成功");
+    }
+
+    // 对菜品批量或单个进行删除
+    @DeleteMapping
+    public R<String> delete(@RequestParam List<Long> ids){
+        log.info("删除菜品，ids为：{}",ids);
+
+        // 删除菜品
+        dishService.deleteByIds(ids);
+
+        // 删除菜品对应的口味
+        LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(DishFlavor::getDishId,ids);
+        dishFlavorService.remove(queryWrapper);
+
+        return R.success("菜品删除成功");
+    }
 }
 
 

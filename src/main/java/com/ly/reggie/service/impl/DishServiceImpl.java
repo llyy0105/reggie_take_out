@@ -2,6 +2,7 @@ package com.ly.reggie.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ly.reggie.common.CustomException;
 import com.ly.reggie.dto.DishDto;
 import com.ly.reggie.entity.Category;
 import com.ly.reggie.entity.Dish;
@@ -90,6 +91,30 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
         dishFlavorService.saveBatch(flavors);
     }
+
+
+    // 根据id批量或是单个删除菜品
+    @Override
+    @Transactional
+    public void deleteByIds(List<Long> ids) {
+
+        // 先查询该菜品是否在售卖
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(ids != null,Dish::getId,ids);
+        List<Dish> dishList = this.list(queryWrapper);
+
+        for (Dish dish : dishList) {
+            Integer status = dish.getStatus();
+            // 如果不是在售卖,则可以删除
+            if (status == 0){
+                this.removeById(dish.getId());
+            }else {
+                // 如果是则抛出业务异常
+                throw new CustomException("该菜品正在售卖，无法删除");
+            }
+        }
+    }
+
 }
 
 
