@@ -1,9 +1,6 @@
 package com.ly.reggie.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -16,6 +13,7 @@ public class DishFlavor implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // 菜品口味id
     private Long id;
 
 
@@ -48,6 +46,7 @@ public class DishFlavor implements Serializable {
 
 
     //是否删除
+    @TableLogic
     private Integer isDeleted;
 
 }

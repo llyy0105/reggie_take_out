@@ -24,7 +24,7 @@ public class AddressBookController {
     @Autowired
     private AddressBookService addressBookService;
 
-    // 新增
+    // 新增地址
     @PostMapping
     public R<AddressBook> save(@RequestBody AddressBook addressBook) {
         addressBook.setUserId(BaseContext.getCurrendId());
@@ -32,6 +32,16 @@ public class AddressBookController {
 
         addressBookService.save(addressBook);
         return R.success(addressBook);
+    }
+
+    // 修改地址
+    @PutMapping
+    public R<String> update(@RequestBody AddressBook addressBook) {
+        addressBook.setUserId(BaseContext.getCurrendId());
+        log.info("addressBook:{}", addressBook);
+
+        addressBookService.updateById(addressBook);
+        return R.success("修改成功");
     }
 
     // 设置默认地址
@@ -54,6 +64,8 @@ public class AddressBookController {
     // 根据id查询地址
     @GetMapping("/{id}")
     public R get(@PathVariable Long id) {
+        log.info("id:{}", id);
+
         AddressBook addressBook = addressBookService.getById(id);
         if (addressBook != null) {
             return R.success(addressBook);
@@ -95,4 +107,24 @@ public class AddressBookController {
         return R.success(list);
     }
 
+    // 根据id删除地址
+    @DeleteMapping
+    public R<String> delete(@RequestParam Long ids){
+        LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AddressBook::getId,ids).eq(AddressBook::getUserId,BaseContext.getCurrendId());
+        addressBookService.remove(queryWrapper);
+
+        return R.success("删除地址成功");
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
