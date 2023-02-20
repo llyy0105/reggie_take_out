@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -95,6 +96,14 @@ public class UserController {
 
         // 验证码不一致，登陆失败
         return R.error("验证码有误");
+    }
+
+    // 用户退出
+    @PostMapping("/loginout")
+    public R<String> logout(HttpSession session){
+        // 清理session中保存的当前员工的id
+        session.removeAttribute("user");
+        return R.success("退出成功");
     }
 }
 

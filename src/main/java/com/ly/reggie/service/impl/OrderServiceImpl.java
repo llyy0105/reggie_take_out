@@ -8,6 +8,7 @@ import com.ly.reggie.common.CustomException;
 import com.ly.reggie.entity.*;
 import com.ly.reggie.mapper.OrderMapper;
 import com.ly.reggie.service.*;
+import com.sun.org.apache.bcel.internal.generic.LMUL;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -103,6 +104,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
         //清空购物车数据
         shoppingCartService.remove(queryWrapper);
+    }
+
+    // 根据订单id获得订单细节
+    public List<OrderDetail> getOrderDetailListByOrderId(Long orderId){
+        LambdaQueryWrapper<OrderDetail> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(orderId != null,OrderDetail::getOrderId,orderId);
+        List<OrderDetail> orderDetailList = orderDetailService.list(queryWrapper);
+
+        return orderDetailList;
     }
 }
 
