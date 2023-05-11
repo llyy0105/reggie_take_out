@@ -80,7 +80,7 @@ public class DishController {
 
         List<DishDto> list = new ArrayList<>();
         // 给分类名称赋值
-         records.forEach(item -> {
+        records.forEach(item -> {
             DishDto dishDto = new DishDto();
             BeanUtils.copyProperties(item, dishDto);
             // 分类id
